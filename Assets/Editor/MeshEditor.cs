@@ -1,10 +1,10 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-[CustomEditor (typeof (Erosion))]
+[CustomEditor (typeof (TerrainHandler))]
 public class MeshEditor : Editor {
 
-    Erosion terrainGenerator;
+    TerrainHandler terrainGenerator;
 
     public override void OnInspectorGUI () {
         DrawDefaultInspector ();
@@ -12,6 +12,11 @@ public class MeshEditor : Editor {
         if (GUILayout.Button ("Generate Mesh")) {
             terrainGenerator.GenerateHeightMap ();
             terrainGenerator.ContructMesh();
+        }
+
+        if (GUILayout.Button("Erode Mesh"))
+        {
+            terrainGenerator.Erode();
         }
 
         //string numIterationsString = terrainGenerator.numErosionIterations.ToString();
@@ -46,7 +51,7 @@ public class MeshEditor : Editor {
     }
 
     void OnEnable () {
-        terrainGenerator = (Erosion) target;
+        terrainGenerator = (TerrainHandler) target;
         Tools.hidden = true;
     }
 
