@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Serialization;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -16,6 +17,11 @@ public class TerrainHandler : MonoBehaviour
     public Material material;
 
     public int erosionBrushRadius = 1;
+    public int erosionIterations = 10000;
+
+    public bool animateErosion = true;
+    public int iterationsPerFrame = 10;
+    int runAnimatedIterations = 0;
 
     float[] map;
     Mesh mesh;
@@ -24,6 +30,31 @@ public class TerrainHandler : MonoBehaviour
 
     MeshRenderer meshRenderer;
     MeshFilter meshFilter;
+
+    void Start()
+    {
+        GenerateHeightMap();
+        Application.runInBackground = true;
+        if (map == null)
+        {
+            map = UnityEngine.Object.FindAnyObjectByType<HeightMapGenerator>().GenerateHeightMap(mapSizeWithBorder);
+        }
+        erosion = UnityEngine.Object.FindAnyObjectByType<Erosion>();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (animateErosion && (runAnimatedIterations < erosionIterations))
+        {
+            for (int i = 0; i < iterationsPerFrame; i++)
+            {
+                Erode();
+            }
+            runAnimatedIterations += iterationsPerFrame;
+        }
+    }
+
     public void GenerateHeightMap()
     {
         mapSizeWithBorder = mapSize + erosionBrushRadius * 2;
@@ -32,12 +63,20 @@ public class TerrainHandler : MonoBehaviour
 
     public void Erode()
     {
-        if (map == null)
+        if (animateErosion)
         {
-            map = UnityEngine.Object.FindAnyObjectByType<HeightMapGenerator>().GenerateHeightMap(mapSizeWithBorder);
+            erosion.Erode(map, mapSize, 1);
         }
-        erosion = UnityEngine.Object.FindAnyObjectByType<Erosion>();
-        erosion.Erode(map, mapSize, 1);
+        else
+        {
+            if (map == null)
+            {
+                map = UnityEngine.Object.FindAnyObjectByType<HeightMapGenerator>().GenerateHeightMap(mapSizeWithBorder);
+            }
+            erosion = UnityEngine.Object.FindAnyObjectByType<Erosion>();
+            erosion.Erode(map, mapSize, erosionIterations);
+
+        }
         ContructMesh();
 
     }
@@ -54,12 +93,9 @@ public class TerrainHandler : MonoBehaviour
     {
         if (erosion != null && erosion.debugPositions != null && showGizmos) {
             Gizmos.color = Color.red;
-            Debug.Log(erosion.debugPositions.Count);
             for (int i = 0; i < erosion.debugPositions.Count; i++)
             {
-                // Debug.Log("In Draw Gizmo for loop");
                 var p1 = MeshPointFromMapPoint(erosion.debugPositions[i]);
-                Debug.Log(p1);
 
                 float p = i / (erosion.debugPositions.Count - 1f);
                 float s = Mathf.Lerp(.2f, .05f, p);
@@ -156,11 +192,5 @@ public class TerrainHandler : MonoBehaviour
 
         meshRenderer = meshHolder.GetComponent<MeshRenderer>();
         meshFilter = meshHolder.GetComponent<MeshFilter>();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }
