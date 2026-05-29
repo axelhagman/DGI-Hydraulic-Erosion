@@ -10,13 +10,23 @@ public class MeshEditor : Editor {
         DrawDefaultInspector ();
 
         if (GUILayout.Button ("Generate Mesh")) {
-            terrainGenerator.GenerateHeightMap ();
-            terrainGenerator.ContructMesh();
+            terrainGenerator.GenerateHeightMap();
+            terrainGenerator.ConstructMesh();
         }
 
         if (GUILayout.Button("Erode Mesh"))
         {
             terrainGenerator.Erode();
+        }
+
+        if (GUILayout.Button("Save Generated Heightmap"))
+        {
+            terrainGenerator.SaveHeightmapPNG();
+        }
+
+        if (GUILayout.Button("Run RMSE"))
+        {
+            terrainGenerator.RunRMSE();
         }
 
         //string numIterationsString = terrainGenerator.numErosionIterations.ToString();
